@@ -76,9 +76,18 @@ class StaScreen extends Component {
         shareYearT: '',
         /**分享名單用的截止月 */
         shareMonthT: '',
+        /**給chart顯示用，螢幕上最終處理好的資料 */
+        endsort: [],
+        /**給slider顯示起始日期用 */
+        sliderSt: 1
+        /**給slider顯示結束日期用 */,
+        sliderEn: 19,
+        /**給slider顯示日期字串 */
+        sliderArray: [],
     }
     async componentDidMount() {
-        //await this.getTotalAtt()
+        await this.getTotalAtt()
+        await this.dataGenerate()
     }
     /**
      * 放入會所id來撈level2全部的排區架構
@@ -116,10 +125,10 @@ class StaScreen extends Component {
         if (totalFetch === false) {
             let limit = await this.props.tolAtt.todos.count
             console.log("VisitScreen limit", limit)
-            const year_from = month - 6 > 0 ? year : year - 1
-            const month_from = month - 6 > 0 ? month - 6 : month + 6
-            const year_to = month - 1 > 0 ? year : year - 1
-            const month_to = month - 1 > 0 ? month - 1 : 11 + month
+            const year_from = month - 5 > 0 ? year : year - 1
+            const month_from = month - 5 > 0 ? month - 5 : month + 7
+            const year_to = year
+            const month_to = month
             await this.props.sumAttend('37', year_from, month_from, year_to, month_to,
                 '', '', this.state.statusSel, this.state.identitySel, '', limit)
             this.setState({ sumOfLordT: await this.props.sumAtt.todos.stats.rows })
@@ -131,21 +140,236 @@ class StaScreen extends Component {
             this.setState({ sumOfGroupM: await this.props.sumAtt.todos.stats.rows })
             await this.props.sumAttend('1473', year_from, month_from, year_to, month_to,
                 '', '', this.state.statusSel, this.state.identitySel, '', limit)
+            let arr = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
+            let arra = []
+            for (let va of arr) {
+                let str = moment(year_from + '/' + month_from + '/01', "yyyy/MM/DD").day("Monday").day(parseInt(va) * 7 + 1).format("MM/DD~") +
+                    moment(year_from + '/' + month_from + '/01', "yyyy/MM/DD").day("Monday").day(parseInt(va) * 7 + 7).format("MM/DD")
+                arra[parseInt(va) - 7] = str
+            }
+            console.log("date", arra)
             this.setState({
                 sumOfGosP: await this.props.sumAtt.todos.stats.rows,
                 shareYearf: year_from, shareMonthf: month_from,
-                shareYearT: year_to, shareMonthT: month_to
+                shareYearT: year_to, shareMonthT: month_to,
+                sliderArray: arra
             })
         }
     }
-    dataGenerate = () => {
+    dataGenerate = async () => {
+        /**sumAtt抓資料結束時是false */
+        const orderCalFetch = await this.props.sumAtt.isFetching
+        /**sumAttend匯出的聖徒主日資料 */
+        let origLo = this.state.sumOfLordT
+        /**sumAttend匯出的聖徒家聚會資料 */
+        let origHo = this.state.sumOfHomeM
+        /**sumAttend匯出的聖徒小排資料 */
+        let origGr = this.state.sumOfGroupM
+        /**sumAttend匯出的聖徒福音出訪資料 */
+        let origGo = this.state.sumOfGosP
+        let sumLo = []
+        let sumHo = []
+        let sumGr = []
+        let sumGo = []
+        let sumLo1 = []
+        let sumHo1 = []
+        let sumGr1 = []
+        let sumGo1 = []
+        if (orderCalFetch === false) {
+            origLo.forEach((obj) => {
+                sumLo.push({
+                    'w1': obj["21"] === null ? 0 : parseInt(obj["21"]),
+                    'w2': obj["22"] === null ? 0 : parseInt(obj["22"]),
+                    'w3': obj["23"] === null ? 0 : parseInt(obj["23"]),
+                    'w4': obj["24"] === null ? 0 : parseInt(obj["24"]),
+                    'w5': obj["25"] === null ? 0 : parseInt(obj["25"]),
+                    'w6': obj["26"] === null ? 0 : parseInt(obj["26"]),
+                    'w7': obj["27"] === null ? 0 : parseInt(obj["27"]),
+                    'w8': obj["28"] === null ? 0 : parseInt(obj["28"]),
+                    'w9': obj["29"] === null ? 0 : parseInt(obj["29"]),
+                    'w10': obj["30"] === null ? 0 : parseInt(obj["30"]),
+                    'w11': obj["31"] === null ? 0 : parseInt(obj["31"]),
+                    'w12': obj["32"] === null ? 0 : parseInt(obj["32"]),
+                    'w13': obj["33"] === null ? 0 : parseInt(obj["33"]),
+                    'w14': obj["34"] === null ? 0 : parseInt(obj["34"]),
+                    'w15': obj["35"] === null ? 0 : parseInt(obj["35"]),
+                    'w16': obj["36"] === null ? 0 : parseInt(obj["36"]),
+                    'w17': obj["37"] === null ? 0 : parseInt(obj["37"]),
+                    'w18': obj["38"] === null ? 0 : parseInt(obj["38"]),
+                    'w19': obj["39"] === null ? 0 : parseInt(obj["39"])
+                })
+            })
+            sumLo1 = [
+                sumLo.reduce((acc, cur) => acc + cur.w1, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w2, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w3, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w4, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w5, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w6, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w7, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w8, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w9, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w10, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w11, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w12, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w13, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w14, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w15, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w16, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w17, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w18, 0),
+                sumLo.reduce((acc, cur) => acc + cur.w19, 0),
+            ]
+            origHo.forEach((obj) => {
+                sumHo.push({
+                    'w1': obj["21"] === null ? 0 : parseInt(obj["21"]),
+                    'w2': obj["22"] === null ? 0 : parseInt(obj["22"]),
+                    'w3': obj["23"] === null ? 0 : parseInt(obj["23"]),
+                    'w4': obj["24"] === null ? 0 : parseInt(obj["24"]),
+                    'w5': obj["25"] === null ? 0 : parseInt(obj["25"]),
+                    'w6': obj["26"] === null ? 0 : parseInt(obj["26"]),
+                    'w7': obj["27"] === null ? 0 : parseInt(obj["27"]),
+                    'w8': obj["28"] === null ? 0 : parseInt(obj["28"]),
+                    'w9': obj["29"] === null ? 0 : parseInt(obj["29"]),
+                    'w10': obj["30"] === null ? 0 : parseInt(obj["30"]),
+                    'w11': obj["31"] === null ? 0 : parseInt(obj["31"]),
+                    'w12': obj["32"] === null ? 0 : parseInt(obj["32"]),
+                    'w13': obj["33"] === null ? 0 : parseInt(obj["33"]),
+                    'w14': obj["34"] === null ? 0 : parseInt(obj["34"]),
+                    'w15': obj["35"] === null ? 0 : parseInt(obj["35"]),
+                    'w16': obj["36"] === null ? 0 : parseInt(obj["36"]),
+                    'w17': obj["37"] === null ? 0 : parseInt(obj["37"]),
+                    'w18': obj["38"] === null ? 0 : parseInt(obj["38"]),
+                    'w19': obj["39"] === null ? 0 : parseInt(obj["39"])
+                })
+            })
+            sumHo1 = [
+                sumHo.reduce((acc, cur) => acc + cur.w1, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w2, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w3, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w4, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w5, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w6, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w7, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w8, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w9, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w10, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w11, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w12, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w13, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w14, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w15, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w16, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w17, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w18, 0),
+                sumHo.reduce((acc, cur) => acc + cur.w19, 0),
+            ]
+            origGr.forEach((obj) => {
+                sumGr.push({
+                    'w1': obj["21"] === null ? 0 : parseInt(obj["21"]),
+                    'w2': obj["22"] === null ? 0 : parseInt(obj["22"]),
+                    'w3': obj["23"] === null ? 0 : parseInt(obj["23"]),
+                    'w4': obj["24"] === null ? 0 : parseInt(obj["24"]),
+                    'w5': obj["25"] === null ? 0 : parseInt(obj["25"]),
+                    'w6': obj["26"] === null ? 0 : parseInt(obj["26"]),
+                    'w7': obj["27"] === null ? 0 : parseInt(obj["27"]),
+                    'w8': obj["28"] === null ? 0 : parseInt(obj["28"]),
+                    'w9': obj["29"] === null ? 0 : parseInt(obj["29"]),
+                    'w10': obj["30"] === null ? 0 : parseInt(obj["30"]),
+                    'w11': obj["31"] === null ? 0 : parseInt(obj["31"]),
+                    'w12': obj["32"] === null ? 0 : parseInt(obj["32"]),
+                    'w13': obj["33"] === null ? 0 : parseInt(obj["33"]),
+                    'w14': obj["34"] === null ? 0 : parseInt(obj["34"]),
+                    'w15': obj["35"] === null ? 0 : parseInt(obj["35"]),
+                    'w16': obj["36"] === null ? 0 : parseInt(obj["36"]),
+                    'w17': obj["37"] === null ? 0 : parseInt(obj["37"]),
+                    'w18': obj["38"] === null ? 0 : parseInt(obj["38"]),
+                    'w19': obj["39"] === null ? 0 : parseInt(obj["39"])
+                })
+            })
+            sumGr1 = [
+                sumGr.reduce((acc, cur) => acc + cur.w1, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w2, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w3, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w4, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w5, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w6, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w7, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w8, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w9, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w10, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w11, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w12, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w13, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w14, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w15, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w16, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w17, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w18, 0),
+                sumGr.reduce((acc, cur) => acc + cur.w19, 0),
+            ]
+            origGo.forEach((obj) => {
+                sumGo.push({
+                    'w1': obj["21"] === null ? 0 : parseInt(obj["21"]),
+                    'w2': obj["22"] === null ? 0 : parseInt(obj["22"]),
+                    'w3': obj["23"] === null ? 0 : parseInt(obj["23"]),
+                    'w4': obj["24"] === null ? 0 : parseInt(obj["24"]),
+                    'w5': obj["25"] === null ? 0 : parseInt(obj["25"]),
+                    'w6': obj["26"] === null ? 0 : parseInt(obj["26"]),
+                    'w7': obj["27"] === null ? 0 : parseInt(obj["27"]),
+                    'w8': obj["28"] === null ? 0 : parseInt(obj["28"]),
+                    'w9': obj["29"] === null ? 0 : parseInt(obj["29"]),
+                    'w10': obj["30"] === null ? 0 : parseInt(obj["30"]),
+                    'w11': obj["31"] === null ? 0 : parseInt(obj["31"]),
+                    'w12': obj["32"] === null ? 0 : parseInt(obj["32"]),
+                    'w13': obj["33"] === null ? 0 : parseInt(obj["33"]),
+                    'w14': obj["34"] === null ? 0 : parseInt(obj["34"]),
+                    'w15': obj["35"] === null ? 0 : parseInt(obj["35"]),
+                    'w16': obj["36"] === null ? 0 : parseInt(obj["36"]),
+                    'w17': obj["37"] === null ? 0 : parseInt(obj["37"]),
+                    'w18': obj["38"] === null ? 0 : parseInt(obj["38"]),
+                    'w19': obj["39"] === null ? 0 : parseInt(obj["39"])
+                })
+            })
+            sumGo1 = [
+                sumGo.reduce((acc, cur) => acc + cur.w1, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w2, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w3, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w4, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w5, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w6, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w7, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w8, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w9, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w10, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w11, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w12, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w13, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w14, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w15, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w16, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w17, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w18, 0),
+                sumGo.reduce((acc, cur) => acc + cur.w19, 0),
+            ]
+            this.setState({
+                endsort: { LoData: sumLo1, HoData: sumHo1, GrData: sumGr1, GoData: sumGo1 },
+            })
+        }
+    }
+    arrayFilter = async () => {
 
     }
     render() {
         const AttFetch = this.props.sumAtt.isFetching
-        const data = {
-            datasets: [{ data: [120, 134, 111, 139, 122, 113, 135, 122, 119, 134], }],
-        }
+        let ensLo = this.state.endsort.LoData
+        let Lodata = { datasets: [{ data: ensLo ? ensLo.slice(this.state.sliderSt, this.state.sliderEn) : [], }], }
+        let ensHo = this.state.endsort.HoData
+        let Hodata = { datasets: [{ data: ensHo ? ensHo.slice(this.state.sliderSt, this.state.sliderEn) : [], }], }
+        let ensGr = this.state.endsort.GrData
+        let Grdata = { datasets: [{ data: ensGr ? ensGr.slice(this.state.sliderSt, this.state.sliderEn) : [], }], }
+        let ensGo = this.state.endsort.GoData
+        let Godata = { datasets: [{ data: ensGo ? ensGo.slice(this.state.sliderSt, this.state.sliderEn) : [], }], }
         const screenWidth = Dimensions.get("window").width
         const chartConfig = {
             backgroundGradientFrom: this.props.themeData.MthemeC,
@@ -183,25 +407,39 @@ class StaScreen extends Component {
                         <ActivityIndicator animating={true} color="gray" size='large' />
                     </View> :
                     <ScrollView
-                        contentContainerStyle={{ width: "100%", justifyContent: 'flex-start' }}
+                        contentContainerStyle={{ width: "100%", justifyContent: 'flex-start', alignItems: 'center' }}
                         ref={(ref) => this.myScroll = ref}>
-                        
-                        <Slider
-                            style={{ width: 150, height: 40 }}
-                            minimumValue={0}
-                            maximumValue={1}
-                            minimumTrackTintColor={this.props.themeData.SthemeC}
-                            maximumTrackTintColor={this.props.themeData.SthemeC}
-                            onSlidingComplete={()=>{}}
-                            onValueChange={()=>{}}
-                        />
+                        <View style={styles.dateText}>
+                            <Text style={[this.props.themeData.XLtheme, this.props.ftszData.paragraph]}>
+                                {this.state.sliderArray[this.state.sliderSt]}</Text>
+                            <Text style={[this.props.themeData.XLtheme, this.props.ftszData.paragraph]}>
+                                {this.state.sliderArray[this.state.sliderEn]}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                            <Slider
+                                style={{ width: "45%", height: 40 }}
+                                minimumValue={1}
+                                maximumValue={19}
+                                minimumTrackTintColor={this.props.themeData.SthemeC}
+                                maximumTrackTintColor={this.props.themeData.SthemeC}
+                                onValueChange={(v) => this.setState({ sliderSt: v.toFixed(0) })}
+                            />
+                            <Slider
+                                style={{ width: "45%", height: 40 }}
+                                minimumValue={1}
+                                maximumValue={19}
+                                minimumTrackTintColor={this.props.themeData.SthemeC}
+                                maximumTrackTintColor={this.props.themeData.SthemeC}
+                                onValueChange={(v) => this.setState({ sliderEn: v.toFixed(0) })}
+                            />
+                        </View>
                         <View style={[styles.chartView, this.props.themeData.SthemeBo]}>
                             <View style={styles.chartTextView}>
                                 <Text style={[this.props.themeData.XLtheme, this.props.ftszData.subhead]}>
-                                    {this.props.lanData.lordTableFull}</Text>
+                                    {this.props.lanData.lordTableFull + this.props.lanData.perWeek}</Text>
                             </View>
                             <LineChart
-                                data={data} width={screenWidth * 0.9}
+                                data={Lodata} width={screenWidth * 0.85}
                                 height={160} verticalLabelRotation={0}
                                 chartConfig={chartConfig} bezier
                                 style={styles.lineChart}
@@ -209,7 +447,51 @@ class StaScreen extends Component {
                                 onDataPointClick={(data) => { }}
                             />
                         </View>
-                    </ScrollView>}
+                        <View style={[styles.chartView, this.props.themeData.SthemeBo]}>
+                            <View style={styles.chartTextView}>
+                                <Text style={[this.props.themeData.XLtheme, this.props.ftszData.subhead]}>
+                                    {this.props.lanData.homeMetFull + this.props.lanData.perWeek}</Text>
+                            </View>
+                            <LineChart
+                                data={Hodata} width={screenWidth * 0.85}
+                                height={160} verticalLabelRotation={0}
+                                chartConfig={chartConfig} bezier
+                                style={styles.lineChart}
+                                segments={3} withShadow={false}
+                                onDataPointClick={(data) => { }}
+                            />
+                        </View>
+                        <View style={[styles.chartView, this.props.themeData.SthemeBo]}>
+                            <View style={styles.chartTextView}>
+                                <Text style={[this.props.themeData.XLtheme, this.props.ftszData.subhead]}>
+                                    {this.props.lanData.grouMetFull + this.props.lanData.perWeek}</Text>
+                            </View>
+                            <LineChart
+                                data={Grdata} width={screenWidth * 0.85}
+                                height={160} verticalLabelRotation={0}
+                                chartConfig={chartConfig} bezier
+                                style={styles.lineChart}
+                                segments={3} withShadow={false}
+                                onDataPointClick={(data) => { }}
+                            />
+                        </View>
+                        <View style={[styles.chartView, this.props.themeData.SthemeBo]}>
+                            <View style={styles.chartTextView}>
+                                <Text style={[this.props.themeData.XLtheme, this.props.ftszData.subhead]}>
+                                    {this.props.lanData.gospVisFull + this.props.lanData.perWeek}</Text>
+                            </View>
+                            <LineChart
+                                data={Godata} width={screenWidth * 0.85}
+                                height={160} verticalLabelRotation={0}
+                                chartConfig={chartConfig} bezier
+                                style={styles.lineChart}
+                                segments={3} withShadow={false}
+                                onDataPointClick={(data) => { }}
+                            />
+                        </View>
+
+                    </ScrollView>
+                }
                 <Portal>
                     <Dialog
                         visible={this.state.districtOp}
@@ -528,7 +810,7 @@ const styles = StyleSheet.create({
     },
     chartView: {
         marginTop: 5,
-        width: "90%",
+        width: "95%",
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 30,
@@ -540,7 +822,7 @@ const styles = StyleSheet.create({
     },
     lineChart: {
         marginVertical: 3,
-        marginRight: 20,
+        marginRight: 15,
     },
     titleCard: {
         flexDirection: 'row',
@@ -560,5 +842,11 @@ const styles = StyleSheet.create({
         height: "90%",
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    dateText: {
+        width: "100%", 
+        flexDirection: 'row', 
+        justifyContent: 'space-evenly', 
+        paddingTop: 5
     },
 })

@@ -163,11 +163,11 @@ class VisitScreen extends Component {
     orderCal = async () => {
         /**sumAtt抓資料結束時是false */
         const orderCalFetch = await this.props.sumAtt.isFetching
-        /**sumAtt抓資料結束時是false */
+        /**sumAttend匯出的聖徒主日資料 */
         let origL = this.state.sumOfLordT;
-        /**sumAttend匯出的聖徒主日資料 */
+        /**sumAttend匯出的聖徒家聚會資料 */
         let origH = this.state.sumOfHomeM;
-        /**sumAttend匯出的聖徒主日資料 */
+        /**sumAttend匯出的聖徒小排資料 */
         let origG = this.state.sumOfGroupM
         /**純主日聚會每週數據 */
         let sumofL = [];

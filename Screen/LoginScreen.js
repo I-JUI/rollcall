@@ -70,7 +70,7 @@ class LoginScreen extends Component {
             })
             const { account, church_id, district, language, pwd } = this.state
             await this.props.login({ account, church_id, district, language, pwd })
-            //await AsyncStorage.clear()
+            //await AsyncStorage.multiRemove(['account', 'church_id', 'district', 'language', 'pwd'])
         } catch (e) {
             console.log("componentDidMount", e)
         }
