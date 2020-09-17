@@ -130,21 +130,21 @@ class EditFrqLstScreen extends Component {
         const year = moment(new Date()).format("yyyy")
         const week = moment(new Date()).format("ww")
         const month = moment(new Date()).format("MM")
-        await this.props.totalAttend(year, week, '0', '1', this.state.genderSel, this.state.statusSel,
-            this.state.identitySel, this.state.groupSel, this.state.searchData)
+        await this.props.totalAttend(year, week, '0', '1', '', this.state.statusSel,
+            this.state.identitySel, this.state.groupSel, '')
         const totalFetch = await this.props.tolAtt.isFetching
         if (totalFetch === false) {
             let limit = await this.props.tolAtt.todos.count
             this.setState({ limit: parseInt(limit) })
             console.log("addFreq limit", limit)
-            await this.props.totalAttend(year, week, '0', limit, this.state.genderSel, this.state.statusSel,
-                this.state.identitySel, this.state.groupSel, this.state.searchData)
+            await this.props.totalAttend(year, week, '0', limit, '', this.state.statusSel,
+                this.state.identitySel, this.state.groupSel, '')
             const year_from = month - 6 > 0 ? year : year - 1
             const month_from = month - 6 > 0 ? month - 6 : month + 6
             const year_to = month - 1 > 0 ? year : year - 1
             const month_to = month - 1 > 0 ? month - 1 : 11 + month
             await this.props.sumAttend(this.state.orderAcord, year_from, month_from, year_to, month_to,
-                this.state.searchData, this.state.genderSel, this.state.statusSel, this.state.identitySel,
+                '', '', this.state.statusSel, this.state.identitySel,
                 this.state.groupSel, limit)
         }
     }
@@ -465,7 +465,7 @@ class EditFrqLstScreen extends Component {
                                     descriptionStyle={[this.props.themeData.Stheme, this.props.ftszData.paragraph]}
                                     description={item.church_name}
                                     right={props => <List.Icon {...props} icon={
-                                        item.freq === 1 ? "check" : ""
+                                        item.freq === 1 ? "check" : "blank"
                                     } color={this.props.themeData.SthemeC} style={this.props.ftszData.paragraph} />}
                                     onPress={() => this.newMember(item.member_name, item.member_id, item.freq)}
                                 />

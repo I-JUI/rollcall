@@ -63,7 +63,7 @@ class AddFreqScreen extends Component {
         /**開關dialog，聚會選項 */
         orderAcordOp: false,
         /**給flatList顯示用，螢幕上最終處理好的資料 */
-        endsort: [],
+        flatlistsort: [],
         /**常用名單 */
         freqList: [],
         /**常用名單的名稱 */
@@ -82,6 +82,9 @@ class AddFreqScreen extends Component {
     async componentDidMount() {
         await this.getTotalAtt(), await this.orderCal()
     }
+    // shouldComponentUpdate(nextProps,nextState){
+    //     if(nextState.flatlistsort === this.state.flatlistsort) return false; return true
+    // }
     /**
      * 放入會所id來撈level2全部的排區架構
      */
@@ -112,21 +115,21 @@ class AddFreqScreen extends Component {
         const year = moment(new Date()).format("yyyy")
         const week = moment(new Date()).format("ww")
         const month = moment(new Date()).format("MM")
-        await this.props.totalAttend(year, week, '0', '1', this.state.genderSel, this.state.statusSel,
-            this.state.identitySel, this.state.groupSel, this.state.searchData)
+        await this.props.totalAttend(year, week, '0', '1', '', this.state.statusSel,
+            this.state.identitySel, this.state.groupSel, '')
         const totalFetch = await this.props.tolAtt.isFetching
         if (totalFetch === false) {
             let limit = await this.props.tolAtt.todos.count
             this.setState({ limit: parseInt(limit) })
             console.log("addFreq limit", limit)
-            await this.props.totalAttend(year, week, '0', limit, this.state.genderSel, this.state.statusSel,
-                this.state.identitySel, this.state.groupSel, this.state.searchData)
+            await this.props.totalAttend(year, week, '0', limit, '', this.state.statusSel,
+                this.state.identitySel, this.state.groupSel, '')
             const year_from = month - 6 > 0 ? year : year - 1
             const month_from = month - 6 > 0 ? month - 6 : month + 6
             const year_to = month - 1 > 0 ? year : year - 1
             const month_to = month - 1 > 0 ? month - 1 : 11 + month
             await this.props.sumAttend(this.state.orderAcord, year_from, month_from, year_to, month_to,
-                this.state.searchData, this.state.genderSel, this.state.statusSel, this.state.identitySel,
+                '', '', this.state.statusSel, this.state.identitySel,
                 this.state.groupSel, limit)
         }
     }
@@ -186,17 +189,20 @@ class AddFreqScreen extends Component {
             })
         }
         toltmp.sort((a, b) => { return b.sum - a.sum })//照sum降冪排序
-        this.setState({ endsort: toltmp })
         console.log("getTotalAtt size", (JSON.stringify(toltmp).length) / 1024, "Kbyte")
         this.setState(prevState => ({ flatListRender: prevState.flatListRender + 1 }))
-        if (this.state.freqList) {
+        if (this.state.freqList != []) {
             /**常用名單 */
             let frqLst = this.state.freqList
             frqLst.forEach((value, id) => {
                 let indexSh = toltmp.map(m => m.member_id).indexOf(frqLst[id]['member_id'])
                 toltmp[indexSh]['freq'] = 1
             })
+            console.log("check if freqlist or not")
+            this.setState({ flatlistsort: toltmp })
         }
+        this.setState({ flatlistsort: toltmp })
+        console.log("orderCal", this.state.flatlistsort)
     }
     /**
      * 照性別、狀態、身分、群組、搜尋、排區架構篩選 
@@ -211,7 +217,7 @@ class AddFreqScreen extends Component {
             this.setState({ districtOp: false, alotsOp: false })
             await this.orderCal()
             /**給flatList顯示用，螢幕上最終處理好的資料 */
-            let obj = this.state.endsort
+            let obj = this.state.flatlistsort
             /**性別 */
             const gender = this.state.genderSel
             /**搜尋聖徒姓名 */
@@ -243,7 +249,7 @@ class AddFreqScreen extends Component {
                 temp = obj.filter(e => e.sex === '男')
                 obj = temp
             }
-            this.setState({ endsort: obj })
+            this.setState({ flatlistsort: obj })
         }
     }
     /**
@@ -278,12 +284,12 @@ class AddFreqScreen extends Component {
                 member_id: id
             })
             /**給flatList顯示用，螢幕上最終處理好的資料 */
-            let insertFlag = this.state.endsort.slice(0, 250)
-            /**新增的那個人在endsort上面的index */
+            let insertFlag = this.state.flatlistsort.slice(0, 250)
+            /**新增的那個人在flatlistsort上面的index */
             let index = insertFlag.map(m => m.member_id).indexOf(id)
             insertFlag[index]['freq'] = 1
-            this.setState({ freqList: newMember, endsort: insertFlag })
-            //console.log("newMember", this.state.freqList, this.state.endsort[index])
+            this.setState({ freqList: newMember, flatlistsort: insertFlag })
+            //console.log("newMember", this.state.freqList, this.state.flatlistsort[index])
         } else if (freq === 1) {
             /**常用名單 */
             let remMember = this.state.freqList
@@ -291,12 +297,12 @@ class AddFreqScreen extends Component {
             let fIndex = remMember.map(e => e.member_id).indexOf(id)
             let remove = remMember.splice(fIndex, 1)
             /**給flatList顯示用，螢幕上最終處理好的資料 */
-            let remFlag = this.state.endsort.slice(0, 250)
-            /**移除的那個人在endsort上面的index */
+            let remFlag = this.state.flatlistsort.slice(0, 250)
+            /**移除的那個人在flatlistsort上面的index */
             let index = remFlag.map(m => m.member_id).indexOf(id)
             remFlag[index]['freq'] = 0
-            this.setState({ freqList: remMember, endsort: remFlag })
-            //console.log("remove newMemeber", this.state.endsort[index])
+            this.setState({ freqList: remMember, flatlistsort: remFlag })
+            //console.log("remove newMemeber", this.state.flatlistsort[index])
         }
     }
     /**
@@ -365,25 +371,26 @@ class AddFreqScreen extends Component {
                 /**製作成全選的名單 */
                 let newMember = []
                 /**給flatList顯示用，螢幕上最終處理好的資料 */
-                let obj = this.state.endsort
+                let obj = this.state.flatlistsort
                 obj.forEach(objj => {
                     newMember.push({
                         member_name: objj.member_name,
                         member_id: objj.member_id
                     })
                 })
-                obj.forEach((value, index) => { obj[index]['freq'] = 1 })
-                this.setState({ freqList: newMember, endsort: obj, isAllSelect: true })
+                obj.forEach((value, index) => { obj[index]['freq'] = '1' })
+                this.setState({ freqList: newMember, flatlistsort: obj, isAllSelect: true })
             }
         } else {
             /**給flatList顯示用，螢幕上最終處理好的資料 */
-            let reMember = this.state.endsort
-            reMember.forEach((value, index) => { reMember[index]['freq'] = 0 })
-            this.setState({ freqList: [], endsort: reMember, isAllSelect: false })
+            let reMember = this.state.flatlistsort
+            reMember.forEach((value, index) => { reMember[index]['freq'] = '0' })
+            this.setState({ freqList: [], flatlistsort: reMember, isAllSelect: false })
         }
     }
     render() {
         const AttFetch = this.props.tolAtt.isFetching || this.props.sumAtt.isFetching
+        console.log("attFetch", AttFetch)
         return (
             <View style={[styles.container, this.props.themeData.MthemeB]}>
                 <View style={styles.searchCard}>
@@ -432,23 +439,24 @@ class AddFreqScreen extends Component {
                     <View style={[this.props.themeData.MthemeB, { flex: 1, width: "92%", justifyContent: 'center' }]}>
                         <FlatList
                             ref={(ref) => this.myScroll = ref}
-                            data={(this.state.endsort).slice(0, 250)}
+                            data={(this.state.flatlistsort).slice(0, 250)}
                             removeClippedSubviews={true}//default false
                             maxToRenderPerBatch={15}//default 10
                             updateCellsBatchingPeriod={120}//default 50 misec
                             initialNumToRender={8}//default 10
                             windowSize={15}//default 21
                             extraData={this.state.flatListRender}
-                            keyExtractor={(item, key) => key}
+                            keyExtractor={(item, key) => key.toString()}
                             renderItem={({ item }) => (
                                 <List.Item
                                     title={item.member_name}
                                     titleStyle={[this.props.themeData.XLtheme, this.props.ftszData.paragraph]}
                                     descriptionStyle={[this.props.themeData.Stheme, this.props.ftszData.paragraph]}
                                     description={item.church_name}
-                                    right={props => <List.Icon {...props} icon={
-                                        item.freq === 1 ? "check" : ""
-                                    } color={this.props.themeData.SthemeC} style={this.props.ftszData.paragraph} />}
+                                    right={props =>
+                                        <List.Icon {...props} icon={item.freq === 1 ? "check" : "blank"}
+                                            color={this.props.themeData.SthemeC} style={this.props.ftszData.paragraph} />
+                                    }
                                     onPress={() => this.newMember(item.member_name, item.member_id, item.freq)}
                                 />
                             )}

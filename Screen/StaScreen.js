@@ -1,8 +1,8 @@
 import React, { Component } from 'react'
-import { View, StyleSheet, Alert, TextInput, ScrollView, AsyncStorage, Dimensions } from 'react-native'
+import { View, StyleSheet, Alert, TextInput, ScrollView, AsyncStorage, Dimensions, Text } from 'react-native'
 import {
     ActivityIndicator, Button, IconButton, List,
-    Dialog, Text, Divider, Portal, FAB, Snackbar
+    Dialog, Divider, Portal, FAB, Snackbar
 } from 'react-native-paper'
 
 // redux
@@ -38,8 +38,6 @@ class StaScreen extends Component {
         identitySel: '',
         /**群組，年齡層之意，學齡前、小學、中學、大專、青職、青壯、中壯、年長 */
         groupSel: '',
-        /**搜尋聖徒姓名 */
-        searchData: '',
         /**開關排區架構的dialog */
         districtOp: false,
         /**第二層排區架構名稱 */
@@ -119,8 +117,8 @@ class StaScreen extends Component {
         const year = moment(new Date()).format("yyyy")
         const week = moment(new Date()).format("ww")
         const month = moment(new Date()).format("MM")
-        await this.props.totalAttend(year, week, '0', '1', '', this.state.statusSel,
-            this.state.identitySel, '', '')
+        await this.props.totalAttend(year, week, '0', '1', this.state.genderSel, this.state.statusSel,
+            this.state.identitySel, this.state.groupSel, '')
         const totalFetch = await this.props.tolAtt.isFetching
         if (totalFetch === false) {
             let limit = await this.props.tolAtt.todos.count
@@ -130,16 +128,16 @@ class StaScreen extends Component {
             const year_to = year
             const month_to = month
             await this.props.sumAttend('37', year_from, month_from, year_to, month_to,
-                '', '', this.state.statusSel, this.state.identitySel, '', limit)
+                '', this.state.genderSel, this.state.statusSel, this.state.identitySel, this.state.groupSel, limit)
             this.setState({ sumOfLordT: await this.props.sumAtt.todos.stats.rows })
             await this.props.sumAttend('38', year_from, month_from, year_to, month_to,
-                '', '', this.state.statusSel, this.state.identitySel, '', limit)
+                '', this.state.genderSel, this.state.statusSel, this.state.identitySel, this.state.groupSel, limit)
             this.setState({ sumOfHomeM: await this.props.sumAtt.todos.stats.rows })
             await this.props.sumAttend('39', year_from, month_from, year_to, month_to,
-                '', '', this.state.statusSel, this.state.identitySel, '', limit)
+                '', this.state.genderSel, this.state.statusSel, this.state.identitySel, this.state.groupSel, limit)
             this.setState({ sumOfGroupM: await this.props.sumAtt.todos.stats.rows })
             await this.props.sumAttend('1473', year_from, month_from, year_to, month_to,
-                '', '', this.state.statusSel, this.state.identitySel, '', limit)
+                '', this.state.genderSel, this.state.statusSel, this.state.identitySel, this.state.groupSel, limit)
             let arr = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
             let arra = []
             for (let va of arr) {
@@ -358,7 +356,16 @@ class StaScreen extends Component {
         }
     }
     arrayFilter = async () => {
-
+        await this.getTotalAtt()
+        await this.dataGenerate()
+    }
+    sliderText = (value) => {
+        const array = this.state.sliderArray
+        _valueChange.setNativeProps({ text: array[value] })
+    }
+    sliderTextEnd = (value) => {
+        const array = this.state.sliderArray
+        _vlaueChangeEnd.setNativeProps({ text: array[value] })
     }
     render() {
         const AttFetch = this.props.sumAtt.isFetching
@@ -410,10 +417,14 @@ class StaScreen extends Component {
                         contentContainerStyle={{ width: "100%", justifyContent: 'flex-start', alignItems: 'center' }}
                         ref={(ref) => this.myScroll = ref}>
                         <View style={styles.dateText}>
-                            <Text style={[this.props.themeData.XLtheme, this.props.ftszData.paragraph]}>
-                                {this.state.sliderArray[this.state.sliderSt]}</Text>
-                            <Text style={[this.props.themeData.XLtheme, this.props.ftszData.paragraph]}>
-                                {this.state.sliderArray[this.state.sliderEn]}</Text>
+                            <TextInput style={[this.props.themeData.XLtheme, this.props.ftszData.paragraph]}
+                                ref={component => (_valueChange = component)} editable={false}
+                                defaultValue={this.state.sliderArray[0]}
+                            />
+                            <TextInput style={[this.props.themeData.XLtheme, this.props.ftszData.paragraph]}
+                                ref={component => (_vlaueChangeEnd = component)} editable={false}
+                                defaultValue={this.state.sliderArray[19]}
+                            />
                         </View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                             <Slider
@@ -422,7 +433,8 @@ class StaScreen extends Component {
                                 maximumValue={19}
                                 minimumTrackTintColor={this.props.themeData.SthemeC}
                                 maximumTrackTintColor={this.props.themeData.SthemeC}
-                                onValueChange={(v) => this.setState({ sliderSt: v.toFixed(0) })}
+                                onValueChange={(v) => this.sliderText(v.toFixed(0))}
+                                onSlidingComplete={(v) => this.setState({ sliderSt: v.toFixed(0) })}
                             />
                             <Slider
                                 style={{ width: "45%", height: 40 }}
@@ -430,7 +442,8 @@ class StaScreen extends Component {
                                 maximumValue={19}
                                 minimumTrackTintColor={this.props.themeData.SthemeC}
                                 maximumTrackTintColor={this.props.themeData.SthemeC}
-                                onValueChange={(v) => this.setState({ sliderEn: v.toFixed(0) })}
+                                onValueChange={(v) => this.sliderTextEnd(v.toFixed(0))}
+                                onSlidingComplete={(v) => this.setState({ sliderEn: v.toFixed(0) })}
                             />
                         </View>
                         <View style={[styles.chartView, this.props.themeData.SthemeBo]}>
@@ -844,9 +857,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     dateText: {
-        width: "100%", 
-        flexDirection: 'row', 
-        justifyContent: 'space-evenly', 
+        width: "100%",
+        flexDirection: 'row',
+        justifyContent: 'space-evenly',
         paddingTop: 5
     },
 })

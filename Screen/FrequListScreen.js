@@ -129,7 +129,7 @@ class FrequListScreen extends Component {
         let limit = await this.props.tolAtt.todos.count
         console.log("RCScreen limit", limit)
         await this.props.totalAttend(year, week, '0', limit, '', '',
-            '', '', this.state.searchData)
+            '', '', '')
     }
     /**
      * 從toltalAtt聚會資料合併到常用名單
