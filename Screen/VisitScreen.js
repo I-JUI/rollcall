@@ -388,6 +388,7 @@ class VisitScreen extends Component {
      * 照性別、狀態、身分、群組、搜尋、排區架構篩選 
      * */
     filterArray = async () => {
+        console.log("searchData",this.state.searchData)
         this.setState({ alotsOp: false, districtOp: false })
         if (this.state.statusSel || this.state.identitySel) {
             await this.getTotalAttVist()
@@ -417,7 +418,7 @@ class VisitScreen extends Component {
                 temp = endsort.filter(e => e.sex === '女')
                 endsort = temp
             } else if (this.state.genderSel === 'm') {
-                temp = endsort.filter(e => e.sex === '女')
+                temp = endsort.filter(e => e.sex === '男')
                 endsort = temp
             }
             if (this.state.groupSel === '學齡前') {
@@ -524,18 +525,27 @@ class VisitScreen extends Component {
             })
         } catch (e) { console.log("onShare", e) }
     }
+    /**
+     * 使用setNativeProps使setState不會一直被重複呼叫，減少render的次數
+     * @param {number} value 搜尋姓名的input value
+     */
+    searchInput = (value) => {
+        _searchValue.setNativeProps({ text: value })
+    }
     render() {
         /**toltalAttend, sumAttend都跑完了是false */
         const AttFetch = this.props.tolAtt.isFetching || this.props.sumAtt.isFetching
+        console.log("AttFetch", AttFetch)
         return (
             <View style={[styles.container, this.props.themeData.MthemeB]}>
                 <View style={styles.titleCard}>
                     <TextInput
                         autoCapitalize='none' placeholderTextColor={this.props.themeData.Stheme}
                         placeholder={this.props.lanData.search} maxLength={20} blurOnSubmit={true}
-                        onChangeText={text => this.setState({ searchData: text })}
-                        onBlur={() => { }}
-                        value={this.state.searchData} textAlignVertical="center"
+                        onBlur={() => this.filterArray()}
+                        ref={component => (_searchValue = component)}
+                        onSubmitEditing={(event) => this.setState({ searchData: event.nativeEvent.text })}
+                        textAlignVertical="center"
                         style={[
                             this.props.themeData.MthemeB, this.props.ftszData.paragraph,
                             this.props.themeData.SthemeBo, this.props.themeData.XLtheme, styles.textInput

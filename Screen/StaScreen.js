@@ -20,7 +20,6 @@ import { totalAttend } from '../Actions/totalAttend'
 import { sumAttend } from '../Actions/sumAttend'
 
 // others
-import DateTimePicker from '@react-native-community/datetimepicker';// default calender picker
 import { Actions } from 'react-native-router-flux' // pages navigation
 import moment from 'moment' // time
 import { LineChart } from 'react-native-chart-kit'
@@ -58,13 +57,13 @@ class StaScreen extends Component {
         mode: 'perWeek',
         /**統計數據模式選擇的顯示文字 */
         modeSh: this.props.lanData.perWeek,
-        /**sumAttend匯出的聖徒主日資料 */
+        /**sumAttend匯出的聖徒主日資料，不可以用setState覆蓋，否則會影響filter運作 */
         sumOfLordT: [],
-        /**sumAttend匯出的聖徒小排資料 */
+        /**sumAttend匯出的聖徒小排資料，不可以用setState覆蓋，否則會影響filter運作 */
         sumOfGroupM: [],
-        /**sumAttend匯出的聖徒家聚會資料 */
+        /**sumAttend匯出的聖徒家聚會資料，不可以用setState覆蓋，否則會影響filter運作 */
         sumOfHomeM: [],
-        /**sumAttend匯出的聖徒福音出訪資料 */
+        /**sumAttend匯出的聖徒福音出訪資料，不可以用setState覆蓋，否則會影響filter運作 */
         sumOfGosP: [],
         /**分享名單用的起始年 */
         shareYearf: '',
@@ -77,9 +76,9 @@ class StaScreen extends Component {
         /**給chart顯示用，螢幕上最終處理好的資料 */
         endsort: [],
         /**給slider顯示起始日期用 */
-        sliderSt: 1
-        /**給slider顯示結束日期用 */,
-        sliderEn: 19,
+        sliderSt: 0,
+        /**給slider顯示結束日期用 */
+        sliderEn: 18,
         /**給slider顯示日期字串 */
         sliderArray: [],
     }
@@ -123,6 +122,8 @@ class StaScreen extends Component {
         if (totalFetch === false) {
             let limit = await this.props.tolAtt.todos.count
             console.log("VisitScreen limit", limit)
+            await this.props.totalAttend(year, week, '0', limit, this.state.genderSel, this.state.statusSel,
+                this.state.identitySel, this.state.groupSel, '')
             const year_from = month - 5 > 0 ? year : year - 1
             const month_from = month - 5 > 0 ? month - 5 : month + 7
             const year_to = year
@@ -138,7 +139,7 @@ class StaScreen extends Component {
             this.setState({ sumOfGroupM: await this.props.sumAtt.todos.stats.rows })
             await this.props.sumAttend('1473', year_from, month_from, year_to, month_to,
                 '', this.state.genderSel, this.state.statusSel, this.state.identitySel, this.state.groupSel, limit)
-            let arr = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
+            let arr = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
             let arra = []
             for (let va of arr) {
                 let str = moment(year_from + '/' + month_from + '/01', "yyyy/MM/DD").day("Monday").day(parseInt(va) * 7 + 1).format("MM/DD~") +
@@ -154,6 +155,9 @@ class StaScreen extends Component {
             })
         }
     }
+    /**
+     * 處理getTotalAtt撈出來的資料，做成圖表用資料
+     */
     dataGenerate = async () => {
         /**sumAtt抓資料結束時是false */
         const orderCalFetch = await this.props.sumAtt.isFetching
@@ -165,6 +169,8 @@ class StaScreen extends Component {
         let origGr = this.state.sumOfGroupM
         /**sumAttend匯出的聖徒福音出訪資料 */
         let origGo = this.state.sumOfGosP
+        /**tolAtt撈出來的原始聖徒資料 */
+        let tolAttorig = await this.props.tolAtt.todos.members
         let sumLo = []
         let sumHo = []
         let sumGr = []
@@ -174,7 +180,7 @@ class StaScreen extends Component {
         let sumGr1 = []
         let sumGo1 = []
         if (orderCalFetch === false) {
-            origLo.forEach((obj) => {
+            origLo.forEach((obj, index) => {
                 sumLo.push({
                     'w1': obj["21"] === null ? 0 : parseInt(obj["21"]),
                     'w2': obj["22"] === null ? 0 : parseInt(obj["22"]),
@@ -194,7 +200,10 @@ class StaScreen extends Component {
                     'w16': obj["36"] === null ? 0 : parseInt(obj["36"]),
                     'w17': obj["37"] === null ? 0 : parseInt(obj["37"]),
                     'w18': obj["38"] === null ? 0 : parseInt(obj["38"]),
-                    'w19': obj["39"] === null ? 0 : parseInt(obj["39"])
+                    'w19': obj["39"] === null ? 0 : parseInt(obj["39"]),
+                    path: tolAttorig[index]['path'],
+                    sex: tolAttorig[index]['sex'],
+                    role: obj['role']
                 })
             })
             sumLo1 = [
@@ -218,7 +227,7 @@ class StaScreen extends Component {
                 sumLo.reduce((acc, cur) => acc + cur.w18, 0),
                 sumLo.reduce((acc, cur) => acc + cur.w19, 0),
             ]
-            origHo.forEach((obj) => {
+            origHo.forEach((obj, index) => {
                 sumHo.push({
                     'w1': obj["21"] === null ? 0 : parseInt(obj["21"]),
                     'w2': obj["22"] === null ? 0 : parseInt(obj["22"]),
@@ -238,7 +247,10 @@ class StaScreen extends Component {
                     'w16': obj["36"] === null ? 0 : parseInt(obj["36"]),
                     'w17': obj["37"] === null ? 0 : parseInt(obj["37"]),
                     'w18': obj["38"] === null ? 0 : parseInt(obj["38"]),
-                    'w19': obj["39"] === null ? 0 : parseInt(obj["39"])
+                    'w19': obj["39"] === null ? 0 : parseInt(obj["39"]),
+                    path: tolAttorig[index]['path'],
+                    sex: tolAttorig[index]['sex'],
+                    role: obj['role']
                 })
             })
             sumHo1 = [
@@ -262,7 +274,7 @@ class StaScreen extends Component {
                 sumHo.reduce((acc, cur) => acc + cur.w18, 0),
                 sumHo.reduce((acc, cur) => acc + cur.w19, 0),
             ]
-            origGr.forEach((obj) => {
+            origGr.forEach((obj, index) => {
                 sumGr.push({
                     'w1': obj["21"] === null ? 0 : parseInt(obj["21"]),
                     'w2': obj["22"] === null ? 0 : parseInt(obj["22"]),
@@ -282,7 +294,10 @@ class StaScreen extends Component {
                     'w16': obj["36"] === null ? 0 : parseInt(obj["36"]),
                     'w17': obj["37"] === null ? 0 : parseInt(obj["37"]),
                     'w18': obj["38"] === null ? 0 : parseInt(obj["38"]),
-                    'w19': obj["39"] === null ? 0 : parseInt(obj["39"])
+                    'w19': obj["39"] === null ? 0 : parseInt(obj["39"]),
+                    path: tolAttorig[index]['path'],
+                    sex: tolAttorig[index]['sex'],
+                    role: obj['role']
                 })
             })
             sumGr1 = [
@@ -306,7 +321,7 @@ class StaScreen extends Component {
                 sumGr.reduce((acc, cur) => acc + cur.w18, 0),
                 sumGr.reduce((acc, cur) => acc + cur.w19, 0),
             ]
-            origGo.forEach((obj) => {
+            origGo.forEach((obj, index) => {
                 sumGo.push({
                     'w1': obj["21"] === null ? 0 : parseInt(obj["21"]),
                     'w2': obj["22"] === null ? 0 : parseInt(obj["22"]),
@@ -326,7 +341,10 @@ class StaScreen extends Component {
                     'w16': obj["36"] === null ? 0 : parseInt(obj["36"]),
                     'w17': obj["37"] === null ? 0 : parseInt(obj["37"]),
                     'w18': obj["38"] === null ? 0 : parseInt(obj["38"]),
-                    'w19': obj["39"] === null ? 0 : parseInt(obj["39"])
+                    'w19': obj["39"] === null ? 0 : parseInt(obj["39"]),
+                    path: tolAttorig[index]['path'],
+                    sex: tolAttorig[index]['sex'],
+                    role: obj['role']
                 })
             })
             sumGo1 = [
@@ -352,32 +370,288 @@ class StaScreen extends Component {
             ]
             this.setState({
                 endsort: { LoData: sumLo1, HoData: sumHo1, GrData: sumGr1, GoData: sumGo1 },
+                sumOfLordT: sumLo, sumOfHomeM: sumHo, sumOfGroupM: sumGr, sumOfGosP: sumGo
             })
         }
     }
+    /**
+     * 篩選器
+     */
     arrayFilter = async () => {
+        if (this.state.identitySel || this.state.statusSel) {
+            await this.getTotalAtt()
+            await this.dataGenerate()
+        } else {
+            const ttmp = JSON.stringify(this.state.level2id + this.state.level3id + this.state.level4id).length
+            /**sumAttend匯出的聖徒主日資料 */
+            let origLo = this.state.sumOfLordT
+            /**sumAttend匯出的聖徒家聚會資料 */
+            let origHo = this.state.sumOfHomeM
+            /**sumAttend匯出的聖徒小排資料 */
+            let origGr = this.state.sumOfGroupM
+            /**sumAttend匯出的聖徒福音出訪資料 */
+            let origGo = this.state.sumOfGosP
+            let sumLo = []
+            let sumHo = []
+            let sumGr = []
+            let sumGo = []
+            if (this.state.level2id || this.state.level3id || this.state.level4id) {
+                if (ttmp === 8) {
+                    sumLo = origLo.filter(e => e.path.split(',')[1] === this.state.level2id)
+                    sumHo = origHo.filter(e => e.path.split(',')[1] === this.state.level2id)
+                    sumGr = origGr.filter(e => e.path.split(',')[1] === this.state.level2id)
+                    sumGo = origGo.filter(e => e.path.split(',')[1] === this.state.level2id)
+                    origLo = sumLo
+                    origHo = sumHo
+                    origGr = sumGr
+                    origGo = sumGo
+                } else if (ttmp === 11) {
+                    sumLo = origLo.filter(e => e.path.split(',')[2] === this.state.level2id)
+                    sumHo = origHo.filter(e => e.path.split(',')[2] === this.state.level2id)
+                    sumGr = origGr.filter(e => e.path.split(',')[2] === this.state.level2id)
+                    sumGo = origGo.filter(e => e.path.split(',')[2] === this.state.level2id)
+                    origLo = sumLo
+                    origHo = sumHo
+                    origGr = sumGr
+                    origGo = sumGo
+                } else if (ttmp === 14) {
+                    sumLo = origLo.filter(e => e.path.split(',')[3] === this.state.level2id)
+                    sumHo = origHo.filter(e => e.path.split(',')[3] === this.state.level2id)
+                    sumGr = origGr.filter(e => e.path.split(',')[3] === this.state.level2id)
+                    sumGo = origGo.filter(e => e.path.split(',')[3] === this.state.level2id)
+                    origLo = sumLo
+                    origHo = sumHo
+                    origGr = sumGr
+                    origGo = sumGo
+                }
+            }
+            if (this.state.genderSel === 'f') {
+                sumLo = origLo.filter(e => e.sex === '女')
+                sumHo = origHo.filter(e => e.sex === '女')
+                sumGr = origGr.filter(e => e.sex === '女')
+                sumGo = origGo.filter(e => e.sex === '女')
+                origLo = sumLo
+                origHo = sumHo
+                origGr = sumGr
+                origGo = sumGo
+            } else if (this.state.genderSel === 'm') {
+                sumLo = origLo.filter(e => e.sex === '男')
+                sumHo = origHo.filter(e => e.sex === '男')
+                sumGr = origGr.filter(e => e.sex === '男')
+                sumGo = origGo.filter(e => e.sex === '男')
+                origLo = sumLo
+                origHo = sumHo
+                origGr = sumGr
+                origGo = sumGo
+            }
+            if (this.state.groupSel === '學齡前') {
+                sumLo = origLo.filter(e => e.role === '學齡前')
+                sumHo = origHo.filter(e => e.role === '學齡前')
+                sumGr = origGr.filter(e => e.role === '學齡前')
+                sumGo = origGo.filter(e => e.role === '學齡前')
+                origLo = sumLo
+                origHo = sumHo
+                origGr = sumGr
+                origGo = sumGo
+            } else if (this.state.groupSel === '小學') {
+                sumLo = origLo.filter(e => e.role === '小學')
+                sumHo = origHo.filter(e => e.role === '小學')
+                sumGr = origGr.filter(e => e.role === '小學')
+                sumGo = origGo.filter(e => e.role === '小學')
+                origLo = sumLo
+                origHo = sumHo
+                origGr = sumGr
+                origGo = sumGo
+            } else if (this.state.groupSel === '中學') {
+                sumLo = origLo.filter(e => e.role === '中學')
+                sumHo = origHo.filter(e => e.role === '中學')
+                sumGr = origGr.filter(e => e.role === '中學')
+                sumGo = origGo.filter(e => e.role === '中學')
+                origLo = sumLo
+                origHo = sumHo
+                origGr = sumGr
+                origGo = sumGo
+            } else if (this.state.groupSel === '大專') {
+                sumLo = origLo.filter(e => e.role === '大專')
+                sumHo = origHo.filter(e => e.role === '大專')
+                sumGr = origGr.filter(e => e.role === '大專')
+                sumGo = origGo.filter(e => e.role === '大專')
+                origLo = sumLo
+                origHo = sumHo
+                origGr = sumGr
+                origGo = sumGo
+            } else if (this.state.groupSel === '青職') {
+                sumLo = origLo.filter(e => e.role === '青職')
+                sumHo = origHo.filter(e => e.role === '青職')
+                sumGr = origGr.filter(e => e.role === '青職')
+                sumGo = origGo.filter(e => e.role === '青職')
+                origLo = sumLo
+                origHo = sumHo
+                origGr = sumGr
+                origGo = sumGo
+            } else if (this.state.groupSel === '青壯') {
+                sumLo = origLo.filter(e => e.role === '青壯')
+                sumHo = origHo.filter(e => e.role === '青壯')
+                sumGr = origGr.filter(e => e.role === '青壯')
+                sumGo = origGo.filter(e => e.role === '青壯')
+                origLo = sumLo
+                origHo = sumHo
+                origGr = sumGr
+                origGo = sumGo
+            } else if (this.state.groupSel === '中壯') {
+                sumLo = origLo.filter(e => e.role === '中壯')
+                sumHo = origHo.filter(e => e.role === '中壯')
+                sumGr = origGr.filter(e => e.role === '中壯')
+                sumGo = origGo.filter(e => e.role === '中壯')
+                origLo = sumLo
+                origHo = sumHo
+                origGr = sumGr
+                origGo = sumGo
+            } else if (this.state.groupSel === '年長') {
+                sumLo = origLo.filter(e => e.role === '年長')
+                sumHo = origHo.filter(e => e.role === '年長')
+                sumGr = origGr.filter(e => e.role === '年長')
+                sumGo = origGo.filter(e => e.role === '年長')
+                origLo = sumLo
+                origHo = sumHo
+                origGr = sumGr
+                origGo = sumGo
+            }
+            sumLo = [
+                origLo.reduce((acc, cur) => acc + cur.w1, 0),
+                origLo.reduce((acc, cur) => acc + cur.w2, 0),
+                origLo.reduce((acc, cur) => acc + cur.w3, 0),
+                origLo.reduce((acc, cur) => acc + cur.w4, 0),
+                origLo.reduce((acc, cur) => acc + cur.w5, 0),
+                origLo.reduce((acc, cur) => acc + cur.w6, 0),
+                origLo.reduce((acc, cur) => acc + cur.w7, 0),
+                origLo.reduce((acc, cur) => acc + cur.w8, 0),
+                origLo.reduce((acc, cur) => acc + cur.w9, 0),
+                origLo.reduce((acc, cur) => acc + cur.w10, 0),
+                origLo.reduce((acc, cur) => acc + cur.w11, 0),
+                origLo.reduce((acc, cur) => acc + cur.w12, 0),
+                origLo.reduce((acc, cur) => acc + cur.w13, 0),
+                origLo.reduce((acc, cur) => acc + cur.w14, 0),
+                origLo.reduce((acc, cur) => acc + cur.w15, 0),
+                origLo.reduce((acc, cur) => acc + cur.w16, 0),
+                origLo.reduce((acc, cur) => acc + cur.w17, 0),
+                origLo.reduce((acc, cur) => acc + cur.w18, 0),
+                origLo.reduce((acc, cur) => acc + cur.w19, 0),
+            ]
+            sumHo = [
+                origHo.reduce((acc, cur) => acc + cur.w1, 0),
+                origHo.reduce((acc, cur) => acc + cur.w2, 0),
+                origHo.reduce((acc, cur) => acc + cur.w3, 0),
+                origHo.reduce((acc, cur) => acc + cur.w4, 0),
+                origHo.reduce((acc, cur) => acc + cur.w5, 0),
+                origHo.reduce((acc, cur) => acc + cur.w6, 0),
+                origHo.reduce((acc, cur) => acc + cur.w7, 0),
+                origHo.reduce((acc, cur) => acc + cur.w8, 0),
+                origHo.reduce((acc, cur) => acc + cur.w9, 0),
+                origHo.reduce((acc, cur) => acc + cur.w10, 0),
+                origHo.reduce((acc, cur) => acc + cur.w11, 0),
+                origHo.reduce((acc, cur) => acc + cur.w12, 0),
+                origHo.reduce((acc, cur) => acc + cur.w13, 0),
+                origHo.reduce((acc, cur) => acc + cur.w14, 0),
+                origHo.reduce((acc, cur) => acc + cur.w15, 0),
+                origHo.reduce((acc, cur) => acc + cur.w16, 0),
+                origHo.reduce((acc, cur) => acc + cur.w17, 0),
+                origHo.reduce((acc, cur) => acc + cur.w18, 0),
+                origHo.reduce((acc, cur) => acc + cur.w19, 0),
+            ]
+            sumGr = [
+                origGr.reduce((acc, cur) => acc + cur.w1, 0),
+                origGr.reduce((acc, cur) => acc + cur.w2, 0),
+                origGr.reduce((acc, cur) => acc + cur.w3, 0),
+                origGr.reduce((acc, cur) => acc + cur.w4, 0),
+                origGr.reduce((acc, cur) => acc + cur.w5, 0),
+                origGr.reduce((acc, cur) => acc + cur.w6, 0),
+                origGr.reduce((acc, cur) => acc + cur.w7, 0),
+                origGr.reduce((acc, cur) => acc + cur.w8, 0),
+                origGr.reduce((acc, cur) => acc + cur.w9, 0),
+                origGr.reduce((acc, cur) => acc + cur.w10, 0),
+                origGr.reduce((acc, cur) => acc + cur.w11, 0),
+                origGr.reduce((acc, cur) => acc + cur.w12, 0),
+                origGr.reduce((acc, cur) => acc + cur.w13, 0),
+                origGr.reduce((acc, cur) => acc + cur.w14, 0),
+                origGr.reduce((acc, cur) => acc + cur.w15, 0),
+                origGr.reduce((acc, cur) => acc + cur.w16, 0),
+                origGr.reduce((acc, cur) => acc + cur.w17, 0),
+                origGr.reduce((acc, cur) => acc + cur.w18, 0),
+                origGr.reduce((acc, cur) => acc + cur.w19, 0),
+            ]
+            sumGo = [
+                origGo.reduce((acc, cur) => acc + cur.w1, 0),
+                origGo.reduce((acc, cur) => acc + cur.w2, 0),
+                origGo.reduce((acc, cur) => acc + cur.w3, 0),
+                origGo.reduce((acc, cur) => acc + cur.w4, 0),
+                origGo.reduce((acc, cur) => acc + cur.w5, 0),
+                origGo.reduce((acc, cur) => acc + cur.w6, 0),
+                origGo.reduce((acc, cur) => acc + cur.w7, 0),
+                origGo.reduce((acc, cur) => acc + cur.w8, 0),
+                origGo.reduce((acc, cur) => acc + cur.w9, 0),
+                origGo.reduce((acc, cur) => acc + cur.w10, 0),
+                origGo.reduce((acc, cur) => acc + cur.w11, 0),
+                origGo.reduce((acc, cur) => acc + cur.w12, 0),
+                origGo.reduce((acc, cur) => acc + cur.w13, 0),
+                origGo.reduce((acc, cur) => acc + cur.w14, 0),
+                origGo.reduce((acc, cur) => acc + cur.w15, 0),
+                origGo.reduce((acc, cur) => acc + cur.w16, 0),
+                origGo.reduce((acc, cur) => acc + cur.w17, 0),
+                origGo.reduce((acc, cur) => acc + cur.w18, 0),
+                origGo.reduce((acc, cur) => acc + cur.w19, 0),
+            ]
+            this.setState({
+                endsort: { LoData: sumLo, HoData: sumHo, GrData: sumGr, GoData: sumGo },
+                alotsOp: false, districtOp: false
+            })
+        }
+    }
+    /**
+     * 清除篩選，回復初始值
+     */
+    clearAll = async () => {
+        this.setState({
+            genderSel: '', identitySel: '', groupSel: '', statusSel: '',
+            level2id: 0, level3id: 0, level4id: 0
+        })
         await this.getTotalAtt()
         await this.dataGenerate()
     }
+    /**
+     * 日期選擇slider的起始值傳給slider上面的日期顯示，不經過setState達到同步效果
+     * @param {number} value - slider滑動的realtime值
+     */
     sliderText = (value) => {
         const array = this.state.sliderArray
         _valueChange.setNativeProps({ text: array[value] })
     }
+    /**
+     * 日期選擇slider的終值傳給slider上面的日期顯示，不經過setState達到同步效果
+     * @param {number} value - slider滑動的realtime值
+     */
     sliderTextEnd = (value) => {
         const array = this.state.sliderArray
         _vlaueChangeEnd.setNativeProps({ text: array[value] })
     }
     render() {
+        /**sumAtt的api抓完是false */
         const AttFetch = this.props.sumAtt.isFetching
         let ensLo = this.state.endsort.LoData
-        let Lodata = { datasets: [{ data: ensLo ? ensLo.slice(this.state.sliderSt, this.state.sliderEn) : [], }], }
+        /**主日聚會圖表數據 */
+        let Lodata = { datasets: [{ data: ensLo ? ensLo.slice(this.state.sliderSt, parseInt(this.state.sliderEn)+1) : [], }], }
         let ensHo = this.state.endsort.HoData
-        let Hodata = { datasets: [{ data: ensHo ? ensHo.slice(this.state.sliderSt, this.state.sliderEn) : [], }], }
+        /**家聚會圖表數據 */
+        let Hodata = { datasets: [{ data: ensHo ? ensHo.slice(this.state.sliderSt, parseInt(this.state.sliderEn)+1) : [], }], }
         let ensGr = this.state.endsort.GrData
-        let Grdata = { datasets: [{ data: ensGr ? ensGr.slice(this.state.sliderSt, this.state.sliderEn) : [], }], }
+        /**小排聚會圖表數據 */
+        let Grdata = { datasets: [{ data: ensGr ? ensGr.slice(this.state.sliderSt, parseInt(this.state.sliderEn)+1) : [], }], }
         let ensGo = this.state.endsort.GoData
-        let Godata = { datasets: [{ data: ensGo ? ensGo.slice(this.state.sliderSt, this.state.sliderEn) : [], }], }
+        /**福音出訪圖表數據 */
+        let Godata = { datasets: [{ data: ensGo ? ensGo.slice(this.state.sliderSt, parseInt(this.state.sliderEn)+1) : [], }], }
+        /**自己抓螢幕寬度 */
         const screenWidth = Dimensions.get("window").width
+        /**所有的圖表設定 */
         const chartConfig = {
             backgroundGradientFrom: this.props.themeData.MthemeC,
             backgroundGradientFromOpacity: 0,//透明度
@@ -397,11 +671,11 @@ class StaScreen extends Component {
             <View style={[styles.container, this.props.themeData.MthemeB]}>
                 <View style={styles.titleCard}>
                     <Button
-                        mode="contained" icon="menu-down"
+                        mode="contained"
                         labelStyle={[this.props.ftszData.paragraph, this.props.themeData.Ltheme]}
                         style={[this.props.themeData.SthemeB, { borderRadius: 18, elevation: 12, marginHorizontal: 5 }]}
-                        onPress={() => this.setState({ modeOp: true })}
-                    >{this.state.modeSh}</Button>
+                        onPress={() => this.clearAll()}
+                    >{this.props.lanData.clearAll}</Button>
                     <IconButton icon="tune-vertical" size={25} color={this.props.themeData.SthemeC}
                         onPress={() => this.setState({ alotsOp: true })} style={{ elevation: 15 }}
                     />
@@ -414,7 +688,7 @@ class StaScreen extends Component {
                         <ActivityIndicator animating={true} color="gray" size='large' />
                     </View> :
                     <ScrollView
-                        contentContainerStyle={{ width: "100%", justifyContent: 'flex-start', alignItems: 'center' }}
+                        contentContainerStyle={styles.scrollView}
                         ref={(ref) => this.myScroll = ref}>
                         <View style={styles.dateText}>
                             <TextInput style={[this.props.themeData.XLtheme, this.props.ftszData.paragraph]}
@@ -423,25 +697,27 @@ class StaScreen extends Component {
                             />
                             <TextInput style={[this.props.themeData.XLtheme, this.props.ftszData.paragraph]}
                                 ref={component => (_vlaueChangeEnd = component)} editable={false}
-                                defaultValue={this.state.sliderArray[19]}
+                                defaultValue={this.state.sliderArray[18]}
                             />
                         </View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                             <Slider
                                 style={{ width: "45%", height: 40 }}
-                                minimumValue={1}
-                                maximumValue={19}
+                                minimumValue={0}
+                                maximumValue={18}
                                 minimumTrackTintColor={this.props.themeData.SthemeC}
                                 maximumTrackTintColor={this.props.themeData.SthemeC}
+                                thumbTintColor={this.props.themeData.SthemeC}
                                 onValueChange={(v) => this.sliderText(v.toFixed(0))}
                                 onSlidingComplete={(v) => this.setState({ sliderSt: v.toFixed(0) })}
                             />
                             <Slider
                                 style={{ width: "45%", height: 40 }}
-                                minimumValue={1}
-                                maximumValue={19}
+                                minimumValue={0}
+                                maximumValue={18}
                                 minimumTrackTintColor={this.props.themeData.SthemeC}
                                 maximumTrackTintColor={this.props.themeData.SthemeC}
+                                thumbTintColor={this.props.themeData.SthemeC}
                                 onValueChange={(v) => this.sliderTextEnd(v.toFixed(0))}
                                 onSlidingComplete={(v) => this.setState({ sliderEn: v.toFixed(0) })}
                             />
@@ -502,7 +778,6 @@ class StaScreen extends Component {
                                 onDataPointClick={(data) => { }}
                             />
                         </View>
-
                     </ScrollView>
                 }
                 <Portal>
@@ -577,7 +852,7 @@ class StaScreen extends Component {
                         <Dialog.Actions>
                             <Button
                                 labelStyle={[this.props.ftszData.paragraph, this.props.themeData.XLtheme]}
-                                onPress={() => { }}
+                                onPress={() => this.arrayFilter()}
                             >OK</Button>
                         </Dialog.Actions>
                     </Dialog>
@@ -730,55 +1005,7 @@ class StaScreen extends Component {
                         <Dialog.Actions>
                             <Button
                                 labelStyle={[this.props.ftszData.paragraph, this.props.themeData.XLtheme]}
-                                onPress={() => { }}
-                            >OK</Button>
-                        </Dialog.Actions>
-                    </Dialog>
-                    <Dialog
-                        visible={this.state.modeOp}
-                        style={this.props.themeData.LthemeB}
-                        onDismiss={() => this.setState({ modeOp: false })}
-                    >
-                        <List.Item
-                            title={this.props.lanData.perWeek}
-                            titleStyle={[this.props.themeData.Stheme, this.props.ftszData.subhead]}
-                            onPress={() => {
-                                this.setState({
-                                    mode: 'perWeek', modeSh: this.props.lanData.perWeek
-                                })
-                            }}
-                        />
-                        <List.Item
-                            title={this.props.lanData.perMonth}
-                            titleStyle={[this.props.themeData.Stheme, this.props.ftszData.subhead]}
-                            onPress={() => {
-                                this.setState({
-                                    mode: 'perMonth', modeSh: this.props.lanData.perMonth
-                                })
-                            }}
-                        />
-                        <List.Item
-                            title={this.props.lanData.ageLayerPie}
-                            titleStyle={[this.props.themeData.Stheme, this.props.ftszData.subhead]}
-                            onPress={() => {
-                                this.setState({
-                                    mode: 'ageLayerPie', modeSh: this.props.lanData.ageLayerPie
-                                })
-                            }}
-                        />
-                        <List.Item
-                            title={this.props.lanData.stableStackBar}
-                            titleStyle={[this.props.themeData.Stheme, this.props.ftszData.subhead]}
-                            onPress={() => {
-                                this.setState({
-                                    mode: 'stableStackBar', modeSh: this.props.lanData.stableStackBar
-                                })
-                            }}
-                        />
-                        <Dialog.Actions>
-                            <Button
-                                labelStyle={[this.props.ftszData.paragraph, this.props.themeData.XLtheme]}
-                                onPress={() => { }}
+                                onPress={() => this.arrayFilter()}
                             >OK</Button>
                         </Dialog.Actions>
                     </Dialog>
@@ -821,8 +1048,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'flex-start',
     },
+    scrollView: {
+        width: "100%",
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        paddingBottom: 10
+    },
     chartView: {
-        marginTop: 5,
+        marginVertical: 5,
         width: "95%",
         justifyContent: 'center',
         alignItems: 'center',

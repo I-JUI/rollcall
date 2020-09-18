@@ -244,6 +244,13 @@ class FrequListScreen extends Component {
             Actions.pop()
         } catch (e) { console.log("deleteFrqLst error", e) }
     }
+    /**
+     * 使用setNativeProps使setState不會一直被重複呼叫，減少render的次數
+     * @param {number} value 搜尋姓名的input value
+     */
+    searchInput = (value) => {
+        _searchValue.setNativeProps({ text: value })
+    }
     render() {
         /**tolAtt抓資料結束時是false */
         const AttFetch = this.props.tolAtt.isFetching
@@ -253,9 +260,10 @@ class FrequListScreen extends Component {
                     <TextInput
                         autoCapitalize='none' placeholderTextColor={this.props.themeData.Stheme}
                         placeholder={this.props.lanData.search} maxLength={20} blurOnSubmit={true}
-                        onChangeText={text => this.setState({ searchData: text })}
+                        ref={component => (_searchValue = component)}
+                        onSubmitEditing={(event) => this.setState({ searchData: event.nativeEvent.text })}
                         onBlur={() => this.arrayFilter()}
-                        value={this.state.searchData} textAlignVertical="center"
+                        textAlignVertical="center"
                         style={[
                             this.props.themeData.MthemeB, this.props.ftszData.paragraph,
                             this.props.themeData.SthemeBo, this.props.themeData.XLtheme, styles.textInput

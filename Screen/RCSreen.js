@@ -228,7 +228,7 @@ class RCScreen extends Component {
         }
         toltmp.sort((a, b) => { return b.sum - a.sum })//照sum降冪排序
         this.setState({ endsort: toltmp })
-        console.log("getTodalAtt", toltmp)
+        //console.log("getTodalAtt", toltmp)
         console.log("getTotalAtt size", (JSON.stringify(toltmp).length) / 1024, "Kbyte")
         this.setState(prevState => ({ flatListRender: prevState.flatListRender + 1 }))
     }
@@ -236,6 +236,7 @@ class RCScreen extends Component {
      * 照性別、狀態、身分、群組、搜尋、排區架構篩選 
      * */
     arrayFilter = async () => {
+        console.log("searchData",this.state.searchData)
         if (this.state.statusSel || this.state.identitySel || this.state.groupSel) {
             this.setState({ alotsOp: false })
             await this.getTotalAtt()
@@ -302,7 +303,7 @@ class RCScreen extends Component {
         let b = this.state.endsort.slice(0, 250)
         /**該聖徒在endsort上面所在的位置index */
         let index = b.map(member => member.member_id).indexOf(id)
-        /**判斷點名聚會項目 */        
+        /**判斷點名聚會項目 */
         origAtt === 0 ? b[index]['attend'] = 1 : b[index]['attend'] = 0
         this.setState({ endsort: b })
         this.setState(prevState => ({ flatListRender: prevState.flatListRender + 1 }))
@@ -316,18 +317,27 @@ class RCScreen extends Component {
         await this.orderCal()
         this.setState({ orderAcordOp: false })
     }
+    /**
+     * 使用setNativeProps使setState不會一直被重複呼叫，減少render的次數
+     * @param {number} value 搜尋姓名的input value
+     */
+    searchInput = (value) => {
+        _searchValue.setNativeProps({ text: value })
+    }
     render() {
         /**toltalAttend, sumAttend都跑完了是false */
         const AttFetch = this.props.tolAtt.isFetching || this.props.sumAtt.isFetching
+        console.log("AttFetch", AttFetch)
         return (
             <View style={[styles.container, this.props.themeData.MthemeB]}>
                 <View style={styles.searchCard}>
                     <TextInput
                         autoCapitalize='none' placeholderTextColor={this.props.themeData.Stheme}
                         placeholder={this.props.lanData.search} maxLength={20} blurOnSubmit={true}
-                        onChangeText={text => this.setState({ searchData: text })}
+                        ref={component => (_searchValue = component)}
                         onBlur={() => this.arrayFilter()}
-                        value={this.state.searchData} textAlignVertical="center"
+                        onSubmitEditing={(event) => this.setState({ searchData: event.nativeEvent.text })}
+                        textAlignVertical="center"
                         style={[
                             this.props.themeData.MthemeB, this.props.ftszData.paragraph,
                             this.props.themeData.SthemeBo, this.props.themeData.XLtheme, styles.textInput

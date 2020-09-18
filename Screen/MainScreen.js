@@ -13,8 +13,7 @@ import { toogleTheme } from '../Actions/toogleTheme'
 import { totalAttend } from '../Actions/totalAttend'
 import { sumAttend } from '../Actions/sumAttend'
 
-// components
-
+// others
 import { Actions } from 'react-native-router-flux' // pages navigation
 import moment from 'moment' // time
 /**

@@ -82,9 +82,6 @@ class AddFreqScreen extends Component {
     async componentDidMount() {
         await this.getTotalAtt(), await this.orderCal()
     }
-    // shouldComponentUpdate(nextProps,nextState){
-    //     if(nextState.flatlistsort === this.state.flatlistsort) return false; return true
-    // }
     /**
      * 放入會所id來撈level2全部的排區架構
      */
@@ -388,6 +385,13 @@ class AddFreqScreen extends Component {
             this.setState({ freqList: [], flatlistsort: reMember, isAllSelect: false })
         }
     }
+    /**
+     * 使用setNativeProps使setState不會一直被重複呼叫，減少render的次數
+     * @param {number} value 搜尋姓名的input value
+     */
+    searchInput = (value) => {
+        _searchValue.setNativeProps({ text: value })
+    }
     render() {
         const AttFetch = this.props.tolAtt.isFetching || this.props.sumAtt.isFetching
         console.log("attFetch", AttFetch)
@@ -397,9 +401,10 @@ class AddFreqScreen extends Component {
                     <TextInput
                         autoCapitalize='none' placeholderTextColor={this.props.themeData.Stheme}
                         placeholder={this.props.lanData.search} maxLength={20} blurOnSubmit={true}
-                        onChangeText={text => this.setState({ searchData: text })}
-                        onBlur={() => this.arrayFilter()}
-                        value={this.state.searchData} textAlignVertical="center"
+                        ref={component => (_searchValue = component)}
+                        onSubmitEditing={(event) => this.setState({ searchData: event.nativeEvent.text })}
+                        onBlur={() => this.arrayFilter()} 
+                        textAlignVertical="center"
                         style={[
                             this.props.themeData.MthemeB, this.props.ftszData.paragraph,
                             this.props.themeData.SthemeBo, this.props.themeData.XLtheme, styles.textInput

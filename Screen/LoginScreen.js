@@ -131,6 +131,20 @@ class LoginScreen extends Component {
             )
         }
     }
+    /**
+     * 使用setNativeProps使setState不會一直被重複呼叫，減少render的次數
+     * @param {number} value - 輸入帳號的input value
+     */
+    accountInput = (value) =>{
+        _accountChange.setNativeProps({ text: value })
+    }
+    /**
+     * 使用setNativeProps使setState不會一直被重複呼叫，減少render的次數
+     * @param {number} value - 輸入密碼的input value
+     */
+    pwdInput = (value) =>{
+        _pwdChange.setNativeProps({ text: value })
+    }
     render() {
         return (
             <View style={[styles.container, this.props.themeData.MthemeB]}>
@@ -158,8 +172,9 @@ class LoginScreen extends Component {
                     <TextInput
                         autoCapitalize='none' placeholderTextColor={this.props.themeData.Stheme}
                         placeholder={this.props.lanData.account}
-                        onChangeText={text => this.setState({ account: text })}
-                        value={this.state.account} textAlignVertical="center"
+                        ref={component => (_accountChange = component)}
+                        onSubmitEditing={(event) => this.setState({ account: event.nativeEvent.text })}
+                        textAlignVertical="center"
                         style={[
                             this.props.themeData.MthemeB, this.props.ftszData.button,
                             this.props.themeData.SthemeBo, this.props.themeData.XLtheme, styles.textInput
@@ -171,8 +186,9 @@ class LoginScreen extends Component {
                         autoCapitalize='none' placeholderTextColor={this.props.themeData.Stheme}
                         placeholder={this.props.lanData.password}
                         secureTextEntry={true}
-                        onChangeText={text => this.setState({ pwd: text })}
-                        value={this.state.pwd} textAlignVertical="center"
+                        ref={component => (_pwdChange = component)}
+                        onSubmitEditing={(event) => this.setState({ pwd: event.nativeEvent.text })}
+                        textAlignVertical="center"
                         style={[
                             this.props.themeData.MthemeB, this.props.ftszData.button,
                             this.props.themeData.SthemeBo, this.props.themeData.XLtheme, styles.textInput

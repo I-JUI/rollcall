@@ -222,6 +222,7 @@ class EditFrqLstScreen extends Component {
      * 照性別、狀態、身分、群組、搜尋、排區架構篩選 
      * */
     arrayFilter = async () => {
+        console.log("searchData", this.state.searchData)
         if (this.state.statusSel || this.state.identitySel || this.state.groupSel) {
             this.setState({ alotsOp: false })
             await this.getTotalAtt()
@@ -400,17 +401,25 @@ class EditFrqLstScreen extends Component {
             this.setState({ freqList: [], endsort: reMember, isAllSelect: false })
         }
     }
+    /**
+     * 使用setNativeProps使setState不會一直被重複呼叫，減少render的次數
+     * @param {number} value 搜尋姓名的input value
+     */
+    searchInput = (value) => {
+        _searchValue.setNativeProps({ text: value })
+    }
     render() {
         const AttFetch = this.props.tolAtt.isFetching || this.props.sumAtt.isFetching
+        console.log("AttFetch", AttFetch)
         return (
             <View style={[styles.container, this.props.themeData.MthemeB]}>
                 <View style={styles.searchCard}>
                     <TextInput
                         autoCapitalize='none' placeholderTextColor={this.props.themeData.Stheme}
                         placeholder={this.props.lanData.search} maxLength={20} blurOnSubmit={true}
-                        onChangeText={text => this.setState({ searchData: text })}
-                        onBlur={() => this.arrayFilter()}
-                        value={this.state.searchData} textAlignVertical="center"
+                        onBlur={() => this.arrayFilter()} textAlignVertical="center"
+                        ref={component => (_searchValue = component)}
+                        onSubmitEditing={(event) => this.setState({ searchData: event.nativeEvent.text })}
                         style={[
                             this.props.themeData.MthemeB, this.props.ftszData.paragraph,
                             this.props.themeData.SthemeBo, this.props.themeData.XLtheme, styles.textInput
